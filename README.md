@@ -18,6 +18,6 @@ jobs:
           IMAGE_NAME: koda-sidekick-ui
           GIT_TAG_PREFIX: sidekick-ui
           DOCKER_BUILD_ARGUMENTS: |
-            "EXAMPLE_KEY_1=VALUE"
-            "EXAMPLE_KEY_2=VALUE"
+            "HF_TOKEN=${{ secrets.HF_TOKEN }}"
+            "NVIDIA_API_KEY=${{ secrets.NVIDIA_API_KEY }}"
 ```
