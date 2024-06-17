@@ -1,0 +1,141 @@
+name: Setup Docker
+version: 1.0.0
+description: |
+  Setup Docker with layer caching, and login to container registry.
+  see https://docs.docker.com/build/ci/github-actions/cache/#local-cache
+
+permissions:
+  contents: write
+  packages: write
+
+inputs:
+  GITHUB_TOKEN:
+    description: |
+      GitHub token 
+      This input is passed to the step that uses the action [docker/login-action] and will be set in the [password] input
+      This input is passed to the step that uses the action [actions/create-release] and will be set as the [env.GITHUB_TOKEN]
+      You'll likely pass this from a repository secret
+      For example: `secrets.GITHUB_TOKEN`
+    required: true
+  APP_DIRECTORY:
+    description: |
+      The root directory of the app being built.
+      Useful for multi-app repos.
+      For example:
+      - Single-app repository: .
+      - Multi-app repository: ./app-dir
+      This input is passed to the action [docker/build-push-action] as the [context] input
+    required: true
+    default: .
+  DOCKERFILE_LOCATION:
+    description: |
+      The location of the Dockerfile, relative to the root of this repository.
+      Note: Not relative to WORKING_DIRECTORY. 
+      If this is a multi-app repository, include the full path from the root of the repository to the subdirectory of the app.
+      For example:
+      - Single app repository: ./Dockerfile
+      - Multi-app repository: ./app-dir/Dockerfile
+      This input is passed to the step that uses the action [docker/build-push-action] and will be set in the [file] input
+    required: true
+    default: ./Dockerfile
+  IMAGE_NAME:
+    description: |
+      The name of the docker image.
+      Do not include the tag.
+      For example:
+      - my_custom_docker_image
+      The full image name to pull will be [ghcr.io/enfuse/my_custom_docker_image:latest]
+      This input is passed to the step that uses the action [docker/build-push-action] and will be set in the [tags] input after being interpolated
+      This input is passed to the step that uses the action [docker/metadata-action] and will be set in the [images] input after being interpolated as the image name
+    required: true
+  GIT_TAG_PREFIX:
+    description: |
+      This is the tag name that will trigger a release, and become the release version prefix.
+      Do not include a version number (it will be extracted from the pushed tag)
+      This input is used to detect a newly pushed tag so the version number can be extracted and used as the release version
+      For example:
+      - name_of_my_custom_app
+      It's assumed that this will be the prefix of a pushed tag that looks like: [name_of_my_custom_app-1.0.3]
+      This input is passed to the step with the id [extract_version] 
+      This input is passed to the step that uses the action [actions/create-release], and will be set in the [tag_name] and [release_name] inputs
+    required: true
+  DOCKER_BUILD_ARGUMENTS:
+    description: |
+      Build args for the dockerfile.
+      These should be key-value pairs coupled with "=" and delimited with newlines 
+      (use the | character to make a multiline yaml string that preserves newlines)
+      For example:
+      |
+      "HF_TOKEN=my-huggingface-token"
+      "NVIDIA_API_KEY=my-nvidia-api-key"
+      Note that the example above is passing secrets into the image, which isn't best-practice, but it's better than committing secrets as hardcoded values
+      This input is passed to the step that uses the action [docker/build-push-action] and will be set in the [build-args] input
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Create cache directory
+      shell: bash
+      run: mkdir -p /tmp/.buildx-cache
+
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.GITHUB_TOKEN }}
+
+    - name: Extract version number from the tag
+      id: extract_version
+      shell: bash
+      run: |
+        version_number=$(echo "${GITHUB_REF}" | sed 's/refs\/tags\/${{ inputs.GIT_TAG_PREFIX }}-//')
+        echo "version_number=$version_number" >> $GITHUB_ENV
+
+    - name: Extract metadata for Docker
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ghcr.io/enfuse/koda_sidekick/sidekick-ui:${{ env.version_number }}
+
+    - name: Build and push Docker image
+      id: push
+      uses: docker/build-push-action@v2
+      with:
+        context: ${{ inputs.APP_DIRECTORY }}
+        file: ${{ inputs.DOCKERFILE_LOCATION }}
+        push: true
+        tags: |
+          ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:${{ env.version_number }}
+          ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:latest
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache,new=true
+        build-args: |
+          ${{ inputs.DOCKER_BUILD_ARGUMENTS }}
+
+    - name: Create release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ inputs.GIT_TAG_PREFIX }}-${{ env.version_number }}
+        release_name: Release ${{ inputs.GIT_TAG_PREFIX }}-${{ env.version_number }}
+        draft: false
+        prerelease: false
