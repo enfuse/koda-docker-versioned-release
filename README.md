@@ -1,6 +1,12 @@
 # koda-docker-versioned-release
 Composite action for publishing a versioned release of a koda service's docker image
 
+In order to publish a versioned release:
+  1) Stage, commit, and push your Dockerfile
+  2) Run `git tag` in order to see a list of tags
+  3) Run `git tag [[INSERT NEW TAG HERE]]`, ensuring you follow the same format as the tags in the list for your new tag
+  4) Run `git push origin [INSERT NEW TAG HERE]`
+
 
 
 Example usage in a workflow:
