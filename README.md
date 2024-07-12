@@ -28,3 +28,6 @@ jobs:
             "HF_TOKEN=${{ secrets.HF_TOKEN }}"
             "NVIDIA_API_KEY=${{ secrets.NVIDIA_API_KEY }}"
 ```
+
+# Cache Docker layers on self hosted runner:
+https://docs.docker.com/build/ci/github-actions/cache/#local-cache
