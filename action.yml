@@ -15,7 +15,7 @@ inputs:
       This input is passed to the step that uses the action [docker/login-action] and will be set in the [password] input
       This input is passed to the step that uses the action [actions/create-release] and will be set as the [env.GITHUB_TOKEN]
       You'll likely pass this from a repository secret
-      For example: `secrets.GITHUB_TOKEN`
+      For example: `secrets.GITHUB_TOKEN` which an org-level context variable setup for you by Github, or you can use your personal access token by setting it as a repository secret for use like this: `secrets.MY_PAT`
     required: true
   APP_DIRECTORY:
     description: |
