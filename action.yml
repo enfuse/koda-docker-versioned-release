@@ -127,7 +127,6 @@ runs:
       with:
         context: ${{ inputs.APP_DIRECTORY }}
         file: ${{ inputs.DOCKERFILE_LOCATION }}
-        push: false
         tags: |
           ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:${{ env.version_number }}
           ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:latest
