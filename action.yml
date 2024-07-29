@@ -1,5 +1,5 @@
 name: Setup Docker
-version: 1.0.0
+version: 2.0.0
 description: |
   Setup Docker with layer caching, and login to container registry.
   see https://docs.docker.com/build/ci/github-actions/cache/#local-cache
