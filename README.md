@@ -17,7 +17,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/sidekick-ui-')
     runs-on: ubuntu-latest
     steps:
-      - uses: enfuse/koda-docker-versioned-release@v1
+      - uses: enfuse/koda-docker-versioned-release@main
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APP_DIRECTORY: ./sidekick
