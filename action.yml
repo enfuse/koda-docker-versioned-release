@@ -71,6 +71,13 @@ inputs:
       Note that the example above is passing secrets into the image, which isn't best-practice, but it's better than committing secrets as hardcoded values
       This input is passed to the step that uses the action [docker/build-push-action] and will be set in the [build-args] input
     required: false
+  INTEGRATION_TEST_SCRIPT_PATH:
+    description: |
+      Optionally run integration tests after building the image, but before pushing it.
+      Omitting a path will skip this step
+      The path should lead to a script that will run the integration tests
+      The script must return an exit code when completed to indicite success/failure, so we only push the image if the tests pass
+    required: false
 
 runs:
   using: "composite"
@@ -113,13 +120,14 @@ runs:
       with:
         images: ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:${{ env.version_number }}
 
-    - name: Build and push Docker image
-      id: push
+    # build local image
+    - name: Build local Docker image for integration test
+      id: build-for-integration-test
       uses: docker/build-push-action@v2
       with:
         context: ${{ inputs.APP_DIRECTORY }}
         file: ${{ inputs.DOCKERFILE_LOCATION }}
-        push: true
+        push: false
         tags: |
           ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:${{ env.version_number }}
           ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:latest
@@ -136,6 +144,28 @@ runs:
       run: |
         rm -rf /tmp/.buildx-cache
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache 
+          
+    # integration test
+    - name: Run integration test
+      if: ${{ inputs.INTEGRATION_TEST_SCRIPT_PATH != '' }}
+      run: |
+        bash ${{ inputs.INTEGRATION_TEST_SCRIPT_PATH }}
+
+    # push image to container repo
+    - name: Push Docker image
+      id: push
+      uses: docker/build-push-action@v2
+      with:
+        context: ${{ inputs.APP_DIRECTORY }}
+        file: ${{ inputs.DOCKERFILE_LOCATION }}
+        push: true
+        tags: |
+          ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:${{ env.version_number }}
+          ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:latest
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=local,src=/tmp/.buildx-cache
+        build-args: |
+          ${{ inputs.DOCKER_BUILD_ARGUMENTS }}
 
     - name: Create release
       id: create_release
