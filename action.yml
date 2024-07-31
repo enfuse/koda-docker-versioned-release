@@ -90,12 +90,12 @@ runs:
 
     - name: Create cache directory
       shell: bash
-      run: mkdir -p /tmp/.buildx-cache
+      run: mkdir -p /tmp/.buildx-cache-${{ inputs.IMAGE_NAME }}
 
     - name: Cache Docker layers
       uses: actions/cache@v2
       with:
-        path: /tmp/.buildx-cache
+        path: /tmp/.buildx-cache-${{ inputs.IMAGE_NAME }}
         key: ${{ runner.os }}-buildx-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-buildx-
@@ -132,8 +132,8 @@ runs:
           ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:${{ env.version_number }}
           ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:latest
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+        cache-from: type=local,src=/tmp/.buildx-cache-${{ inputs.IMAGE_NAME }}
+        cache-to: type=local,dest=/tmp/.buildx-cache-${{ inputs.IMAGE_NAME }}-new,mode=max
         build-args: |
           ${{ inputs.DOCKER_BUILD_ARGUMENTS }}
 
@@ -143,8 +143,8 @@ runs:
       name: Move cache
       shell: bash
       run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache 
+        rm -rf /tmp/.buildx-cache-${{ inputs.IMAGE_NAME }}
+        mv /tmp/.buildx-cache-${{ inputs.IMAGE_NAME }}-new /tmp/.buildx-cache-${{ inputs.IMAGE_NAME }} 
           
     # integration test
     - name: Run integration test
@@ -165,7 +165,7 @@ runs:
           ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:${{ env.version_number }}
           ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:latest
         labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-from: type=local,src=/tmp/.buildx-cache-${{ inputs.IMAGE_NAME }}
         build-args: |
           ${{ inputs.DOCKER_BUILD_ARGUMENTS }}
 
