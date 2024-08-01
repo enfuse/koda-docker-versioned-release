@@ -15,7 +15,7 @@ Example usage in a workflow:
 jobs:
   release-sidekick-ui:
     if: startsWith(github.ref, 'refs/tags/sidekick-ui-')
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted,linux,koda]
     steps:
       - uses: enfuse/koda-docker-versioned-release@main
         with:
