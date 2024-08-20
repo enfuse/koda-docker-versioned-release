@@ -137,7 +137,7 @@ runs:
           ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:${{ env.version_number }}
           ghcr.io/enfuse/${{ inputs.IMAGE_NAME }}:latest
         labels: ${{ steps.meta.outputs.labels }}
-        no-cache: $${{ inputs.DOCKER_BUILD_NO_CACHE }}
+        no-cache: ${{ inputs.DOCKER_BUILD_NO_CACHE }}
         cache-from: type=local,src=/tmp/.buildx-cache-${{ inputs.IMAGE_NAME }}
         cache-to: type=local,dest=/tmp/.buildx-cache-${{ inputs.IMAGE_NAME }}-new,mode=max
         build-args: |
