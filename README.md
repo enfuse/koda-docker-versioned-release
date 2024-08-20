@@ -28,6 +28,7 @@ jobs:
             "HF_TOKEN=${{ secrets.HF_TOKEN }}"
             "NVIDIA_API_KEY=${{ secrets.NVIDIA_API_KEY }}"
           INTEGRATION_TEST_SCRIPT_PATH: ./test/run_integration_tests.sh
+          DOCKER_BUILD_NO_CACHE: false
 ```
 
 # Cache Docker layers on self hosted runner:
