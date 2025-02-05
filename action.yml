@@ -100,7 +100,7 @@ runs:
       run: mkdir -p /tmp/.buildx-cache-${{ inputs.IMAGE_NAME }}
 
     - name: Cache Docker layers
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: /tmp/.buildx-cache-${{ inputs.IMAGE_NAME }}
         key: ${{ runner.os }}-buildx-${{ github.sha }}
