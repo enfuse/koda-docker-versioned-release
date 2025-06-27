@@ -12,6 +12,13 @@ In order to publish a versioned release:
 
 Example usage in a workflow:
 ```yml
+name: Release Container Image for the Sidekick UI
+
+on:
+  push:
+    tags:
+      - 'sidekick-ui-[0-9].[0-9].[0-9]*'
+
 jobs:
   release-sidekick-ui:
     if: startsWith(github.ref, 'refs/tags/sidekick-ui-')
