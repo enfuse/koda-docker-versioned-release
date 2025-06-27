@@ -19,6 +19,10 @@ on:
     tags:
       - 'sidekick-ui-[0-9].[0-9].[0-9]*'
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   release-sidekick-ui:
     if: startsWith(github.ref, 'refs/tags/sidekick-ui-')
