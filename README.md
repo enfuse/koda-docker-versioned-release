@@ -26,7 +26,7 @@ permissions:
 jobs:
   release-sidekick-ui:
     if: startsWith(github.ref, 'refs/tags/sidekick-ui-')
-    runs-on: [self-hosted,linux,koda]
+    runs-on: [ubuntu-latest]
     steps:
       - uses: enfuse/koda-docker-versioned-release@main
         with:
